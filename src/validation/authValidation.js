@@ -12,7 +12,7 @@ export const loginUserSchema = {
   [Segments.BODY]: Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required(),
-  }),
+  }).required(),
 };
 
 export const requestResetEmailSchema = {
@@ -26,4 +26,10 @@ export const resetPasswordSchema = {
     password: Joi.string().min(8).required(),
     token: Joi.string().required(),
   }),
+};
+
+export const refreshSchema = {
+  [Segments.BODY]: Joi.object({
+    refreshToken: Joi.string().required(),
+  }).required(),
 };

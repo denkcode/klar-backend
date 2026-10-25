@@ -2,6 +2,7 @@ import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
 import { User } from "../models/user.js";
 import { createSession } from "../services/auth.js";
+import { Session } from "../models/session.js";
 
 // Register User
 
@@ -53,4 +54,40 @@ export const loginUser = async (req, res) => {
 
 export const getMe = async (req, res) => {
   res.status(200).json(req.user);
+};
+
+export const logOut = async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (refreshToken) {
+    await Session.deleteOne({ refreshToken });
+  }
+
+  res.status(204).send();
+};
+
+export const refresh = async (req, res) => {
+  const { refreshToken } = req.body;
+
+  const session = await Session.findOne({
+    refreshToken,
+  });
+
+  if (!session) {
+    throw createHttpError(401, "Session not found");
+  }
+  const isRefreshTokenExpired = session.refreshTokenValidUntil < new Date();
+
+  if (isRefreshTokenExpired) {
+    await session.deleteOne();
+    throw createHttpError(401, "Refresh token expired");
+  }
+
+  await session.deleteOne();
+  const newSession = await createSession(session.userId);
+  res.status(200).json({
+    message: "Session refreshed",
+    accessToken: newSession.accessToken,
+    refreshToken: newSession.refreshToken,
+  });
 };
