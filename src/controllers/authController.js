@@ -2,11 +2,10 @@ import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
 import { User } from "../models/user.js";
 import { createSession } from "../services/auth.js";
-import { setSessionCookies } from "../services/auth.js";
 
 // Register User
 
-export const registerUser = async (req, res, next) => {
+export const registerUser = async (req, res) => {
   const { email, password, name } = req.body;
 
   const existingUser = await User.findOne({ email });
@@ -31,24 +30,27 @@ export const registerUser = async (req, res, next) => {
   });
 };
 
-export const LoginUser = async (req, res) => {
+export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
   if (!user) {
-    throw createHttpError(401, "Invalid Email");
+    throw createHttpError(401, "Invalid email or password");
   }
 
-  const isValidPaswword = await bcrypt.compare(password, user.password);
-  if (!isValidPaswword) {
-    throw createHttpError(401, "Invalid password");
+  const isValidPassword = await bcrypt.compare(password, user.password);
+  if (!isValidPassword) {
+    throw createHttpError(401, "Invalid email or password");
   }
 
   const newSession = await createSession(user._id);
-  setSessionCookies(res, newSession);
   res.status(200).json({
     user,
     accessToken: newSession.accessToken,
     refreshToken: newSession.refreshToken,
   });
+};
+
+export const getMe = async (req, res) => {
+  res.status(200).json(req.user);
 };

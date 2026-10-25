@@ -4,7 +4,7 @@ export const registerSchema = {
   [Segments.BODY]: Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().min(8).required(),
-    name: Joi.string().min(1).max(50).required(),
+    name: Joi.string().min(1).max(50),
   }),
 };
 
